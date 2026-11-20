@@ -397,14 +397,16 @@ export default function SupportStudio() {
                         </div>
                         {!!m.answer?.citations.length && (
                           <div className="citations">
-                            {m.answer.citations.map((c, i) => {
+                            {m.answer.citations.filter((citation, index, all) =>
+                              all.findIndex((item) => item.articleId === citation.articleId) === index
+                            ).map((c) => {
                               const article = articles.find(
                                 (a) => a.id === c.articleId,
                               );
                               return (
                                 article && (
                                   <button
-                                    key={`${c.articleId}-${i}`}
+                                    key={c.articleId}
                                     onClick={() => {
                                       setSelectedArticle(article);
                                       setPanel("knowledge");
