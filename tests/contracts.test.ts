@@ -96,6 +96,14 @@ test("accepts fenced JSON with leading whitespace and rejects incomplete output"
     parseAnswer("Here is the result:\n" + JSON.stringify(value)),
     value,
   );
+  assert.deepEqual(
+    parseAnswer(
+      JSON.stringify(value)
+        .replace('"reply":', "reply:")
+        .replace('"citations":[]', '"citations":[], '),
+    ),
+    value,
+  );
   assert.throws(() => parseAnswer('{"reply":"partial'), SyntaxError);
   assert.throws(() => parseAnswer('{"reply":"Missing required fields"}'));
 });

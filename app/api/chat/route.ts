@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         "\nYour entire output MUST be one JSON object. The reply field contains the plain-text customer response. Do not write any text outside the JSON object. Do not put source IDs such as [billing-invoices] in reply; the UI renders citations separately. Match this schema: " +
         JSON.stringify(z.toJSONSchema(answerSchema)),
       messages: parsed.data.messages,
-      maxOutputTokens: 2200,
+      maxOutputTokens: 3000,
       maxRetries: 0,
       abortSignal: AbortSignal.timeout(45_000),
     };
@@ -74,6 +74,8 @@ export async function POST(request: Request) {
     if (direct) {
       const first = await generateText(options);
       try {
+        if (first.finishReason === "length")
+          throw new SyntaxError("Truncated generation");
         answer = parseAnswer(first.text);
       } catch {
         // One bounded formatting retry for providers without native JSON schema mode.
@@ -83,7 +85,18 @@ export async function POST(request: Request) {
             options.system +
             "\nIMPORTANT: A previous attempt had invalid JSON. Produce only the requested object with all required fields. Escape newlines inside strings. Keep every array short.",
         });
-        answer = parseAnswer(retry.text);
+        if (retry.finishReason === "length")
+          throw new SyntaxError("Truncated generation");
+        try {
+          answer = parseAnswer(retry.text);
+        } catch (error) {
+          console.error("invalid_model_format", {
+            finishReason: retry.finishReason,
+            characters: retry.text.length,
+            hasObject: retry.text.includes("{") && retry.text.includes("}"),
+          });
+          throw error;
+        }
       }
     } else {
       answer = (
