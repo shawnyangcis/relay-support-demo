@@ -24,7 +24,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-On Vercel, deployment OIDC authenticates to AI Gateway automatically. The team must have eligible Gateway credits. Set `AI_GATEWAY_MODEL` to a supported Gateway model ID to override the default `google/gemini-3.8-flash` (verified against the live catalog during implementation). Never commit credentials or `.vercel` files.
+On Vercel, deployment OIDC authenticates to AI Gateway automatically. The team must have eligible Gateway credits. Set `AI_GATEWAY_MODEL` to a supported Gateway model ID to override the default `openai/gpt-5.4-mini` (verified against the live catalog during implementation). Never commit credentials or `.vercel` files.
 
 ```sh
 npm test

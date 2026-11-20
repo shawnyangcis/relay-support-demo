@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return Response.json({ error: 'Please send a message under 3,000 characters, or start a new conversation.' }, { status: 400 });
   try {
-    const model = process.env.AI_GATEWAY_MODEL || 'google/gemini-3.8-flash';
+    const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5.4-mini';
     const result = await generateText({
       model,
       system: systemPrompt,
@@ -35,7 +35,9 @@ export async function POST(request: Request) {
     return Response.json({ ...validateEvidence(result.output, parsed.data.messages), mode: 'live', model, latencyMs: Date.now() - now });
   } catch (error) {
     // Never log conversation contents, provider payloads, credentials, or raw errors.
-    console.error('chat_generation_failed', { type: error instanceof Error ? error.name : 'unknown' });
+    const diagnostic = error as { name?: string; statusCode?: number; generationId?: string; message?: string };
+    const category = ['model', 'provider', 'authentication', 'credit', 'quota', 'schema', 'unsupported', 'not found', 'payment', 'verification', 'timeout'].filter(word => diagnostic.message?.toLowerCase().includes(word));
+    console.error('chat_generation_failed', { type: diagnostic.name, status: diagnostic.statusCode, generationId: diagnostic.generationId, category });
     return Response.json({ error: 'The live assistant is temporarily unavailable. Please try again shortly. Your conversation is still here, and you can preview a handoff.' }, { status: 503 });
   }
 }
