@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { requestSchema, validateEvidence, type Answer } from "../lib/contracts";
 import { articles } from "../lib/knowledge";
+import { parseAnswer } from "../lib/parse-answer";
 
 test("rejects system message injection, empty messages, and oversized inputs", () => {
   assert.equal(
@@ -75,4 +76,26 @@ test("handoff evidence never turns assistant advice into a confirmed customer ac
     { role: "user", content: "I already tried that." },
   ]);
   assert.deepEqual(result.customerEvidence, ["I already tried that."]);
+});
+
+test("accepts fenced JSON with leading whitespace and rejects incomplete output", () => {
+  const value = {
+    reply: "Please request a new reset link.",
+    citations: [],
+    suggestions: [],
+    needsHuman: false,
+    topic: "Login",
+    customerEvidence: [],
+    nextStep: "Review access",
+  };
+  assert.deepEqual(
+    parseAnswer("\n\n```json\n" + JSON.stringify(value) + "\n```"),
+    value,
+  );
+  assert.deepEqual(
+    parseAnswer("Here is the result:\n" + JSON.stringify(value)),
+    value,
+  );
+  assert.throws(() => parseAnswer('{"reply":"partial'), SyntaxError);
+  assert.throws(() => parseAnswer('{"reply":"Missing required fields"}'));
 });

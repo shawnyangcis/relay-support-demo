@@ -3,6 +3,7 @@ import { answerSchema, requestSchema, validateEvidence } from "@/lib/contracts";
 import { systemPrompt } from "@/lib/prompt";
 import { supportModel } from "@/lib/model";
 import { z } from "zod";
+import { parseAnswer } from "@/lib/parse-answer";
 
 export const maxDuration = 60;
 const windows = new Map<string, { count: number; until: number }>();
@@ -62,27 +63,36 @@ export async function POST(request: Request) {
       model,
       system:
         systemPrompt +
-        "\nReturn ONLY a JSON object (no markdown fences) matching this schema: " +
+        "\nYour entire output MUST be one JSON object. The reply field contains the plain-text customer response. Do not write any text outside the JSON object. Do not put source IDs such as [billing-invoices] in reply; the UI renders citations separately. Match this schema: " +
         JSON.stringify(z.toJSONSchema(answerSchema)),
       messages: parsed.data.messages,
       maxOutputTokens: 2200,
       maxRetries: 0,
       abortSignal: AbortSignal.timeout(45_000),
     };
-    const answer = direct
-      ? answerSchema.parse(
-          JSON.parse(
-            (await generateText(options)).text
-              .replace(/^```(?:json)?\s*|\s*```$/g, "")
-              .trim(),
-          ),
-        )
-      : (
-          await generateText({
-            ...options,
-            output: Output.object({ schema: answerSchema }),
-          })
-        ).output;
+    let answer;
+    if (direct) {
+      const first = await generateText(options);
+      try {
+        answer = parseAnswer(first.text);
+      } catch {
+        // One bounded formatting retry for providers without native JSON schema mode.
+        const retry = await generateText({
+          ...options,
+          system:
+            options.system +
+            "\nIMPORTANT: A previous attempt had invalid JSON. Produce only the requested object with all required fields. Escape newlines inside strings. Keep every array short.",
+        });
+        answer = parseAnswer(retry.text);
+      }
+    } else {
+      answer = (
+        await generateText({
+          ...options,
+          output: Output.object({ schema: answerSchema }),
+        })
+      ).output;
+    }
     return Response.json({
       ...validateEvidence(answer, parsed.data.messages),
       mode: "live",
