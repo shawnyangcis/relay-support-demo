@@ -100,7 +100,7 @@ test("accepts fenced JSON with leading whitespace and rejects incomplete output"
     parseAnswer(
       JSON.stringify(value)
         .replace('"reply":', "reply:")
-        .replace('"citations":[]', '"citations":[], '),
+        .replace(/}$/, ',}'),
     ),
     value,
   );
