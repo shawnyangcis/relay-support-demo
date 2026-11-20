@@ -1,6 +1,6 @@
 # Relay — AI support chatbot demo
 
-A proposal demonstration for a website support chatbot. **Northstar is fictional; all six knowledge articles are sample content.** The assistant uses a live model through Vercel AI Gateway. Human handoff is a local preview, not a submitted ticket.
+A proposal demonstration for a website support chatbot. **Northstar is fictional; all six knowledge articles are sample content.** The assistant supports a live LongCat model with an optional Vercel AI Gateway configuration. Human handoff is a local preview, not a submitted ticket.
 
 ## Try it
 
@@ -11,7 +11,7 @@ A proposal demonstration for a website support chatbot. **Northstar is fictional
 
 ## Stack
 
-Next.js App Router, React, TypeScript, Vercel AI SDK, Zod, and Lucide icons. The six-article knowledge base is provided in full to the model on each turn; this deliberately avoids an unnecessary vector database for a small corpus. Model output is schema-validated. Citation passages must be exact substrings of approved articles, and handoff customer statements must occur verbatim in user messages. These checks establish provenance, not guaranteed semantic accuracy.
+Next.js App Router, React, TypeScript, Vercel AI SDK with an OpenAI-compatible provider, Zod, and Lucide icons. The six-article knowledge base is provided in full to the model on each turn; this deliberately avoids an unnecessary vector database for a small corpus. Model output is schema-validated. Citation passages must be exact substrings of approved articles, and handoff customer statements must occur verbatim in user messages. These checks establish provenance, not guaranteed semantic accuracy.
 
 ## Development
 
@@ -20,11 +20,11 @@ Node.js 22 or later.
 ```sh
 npm ci
 cp .env.example .env.local
-# Set AI_GATEWAY_API_KEY locally, or link the Vercel project and pull development env.
+# Set CHAT_API_KEY locally for LongCat. Never commit the key.
 npm run dev
 ```
 
-On Vercel, deployment OIDC authenticates to AI Gateway automatically. The team must have eligible Gateway credits. Set `AI_GATEWAY_MODEL` to a supported Gateway model ID to override the default `openai/gpt-5.4-mini` (verified against the live catalog during implementation). Never commit credentials or `.vercel` files.
+The deployed demo uses a dedicated LongCat key stored as a Vercel Production Secret (`CHAT_API_KEY`). `CHAT_BASE_URL` and `CHAT_MODEL` override the direct provider defaults. LongCat thinking is disabled for this short support workflow, with generated JSON validated locally using Zod. Without `CHAT_API_KEY`, the server uses AI Gateway, which requires eligible credits and either OIDC or `AI_GATEWAY_API_KEY`. Never commit credentials or `.vercel` files.
 
 ```sh
 npm test
