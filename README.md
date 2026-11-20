@@ -4,6 +4,8 @@ A proposal demonstration for a website support chatbot. **Northstar is fictional
 
 ## Try it
 
+[Open the live demo](https://relay-support-demo-inky.vercel.app).
+
 1. Ask “How do I download an invoice?” and open the cited article.
 2. Start the login scenario. Say “My reset link expired”, then “I already tried that”.
 3. Ask whether a custom identity system is guaranteed to work. The sample documentation cannot confirm that.
@@ -24,7 +26,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-The deployed demo uses a dedicated LongCat key stored as a Vercel Production Secret (`CHAT_API_KEY`). `CHAT_BASE_URL` and `CHAT_MODEL` override the direct provider defaults. LongCat thinking is disabled for this short support workflow, with generated JSON validated locally using Zod. Without `CHAT_API_KEY`, the server uses AI Gateway, which requires eligible credits and either OIDC or `AI_GATEWAY_API_KEY`. Never commit credentials or `.vercel` files.
+The deployed demo uses a dedicated LongCat key stored as a Vercel Production Secret (`CHAT_API_KEY`). `CHAT_BASE_URL` and `CHAT_MODEL` override the direct provider defaults. LongCat uses its [Responses API](https://longcat.ai/platform/docs/api/responses) with strict JSON schema output and reasoning disabled for this short support workflow. Output is also validated locally using Zod. Other compatible providers use Chat Completions with local schema validation and one bounded formatting retry. Without `CHAT_API_KEY`, the server uses AI Gateway, which requires eligible credits and either OIDC or `AI_GATEWAY_API_KEY`. Never commit credentials or `.vercel` files.
 
 ```sh
 npm test
